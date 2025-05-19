@@ -25,7 +25,7 @@ const useAdminStore = create(
 
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.get(`http://localhost:3000/admin/${adminId}`);
+          const response = await axios.get(`https://erp-repo-nnrs.onrender.com/admin/${adminId}`);
           console.log(response)
           set({
             adminData: response.data,
@@ -66,7 +66,7 @@ const useAdminStore = create(
 
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.put(`http://localhost:3000/admin/${adminId}`, changedData);
+          const response = await axios.put(`https://erp-repo-nnrs.onrender.com/admin/${adminId}`, changedData);
           
           // Update the store with the new data
           set({

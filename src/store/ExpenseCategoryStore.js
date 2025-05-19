@@ -13,7 +13,7 @@ const useExpenseCategoryStore = create((set, get) => ({
   fetchAllCategories: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/expenseCategory/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/expenseCategory/all');
       set({ categories: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -39,7 +39,7 @@ const useExpenseCategoryStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/expenseCategory/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/expenseCategory/admin/${adminId}`);
       set({ categories: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -55,7 +55,7 @@ const useExpenseCategoryStore = create((set, get) => ({
   fetchCategoryById: async (categoryId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/expenseCategory/${categoryId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/expenseCategory/${categoryId}`);
       set({ currentCategory: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -79,7 +79,7 @@ const useExpenseCategoryStore = create((set, get) => ({
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/expenseCategory', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/expenseCategory', dataToSend);
       
       // Mettre à jour la liste des catégories avec la nouvelle catégorie
       set(state => ({
@@ -103,7 +103,7 @@ const useExpenseCategoryStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await axios.put(`http://localhost:3000/expenseCategory/${categoryId}`, updateData);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/expenseCategory/${categoryId}`, updateData);
       
       // Mettre à jour la catégorie dans la liste des catégories
       set(state => ({
@@ -129,7 +129,7 @@ const useExpenseCategoryStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/expenseCategory/${categoryId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/expenseCategory/${categoryId}`);
       
       // Supprimer la catégorie de la liste des catégories
       set(state => ({

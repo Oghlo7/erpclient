@@ -13,7 +13,7 @@ const usePersonStore = create((set, get) => ({
   fetchAllPersons: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/person/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/person/all');
       set({ persons: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -39,7 +39,7 @@ const usePersonStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/person/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/person/admin/${adminId}`);
       set({ persons: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -55,7 +55,7 @@ const usePersonStore = create((set, get) => ({
   fetchPersonById: async (personId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/person/${personId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/person/${personId}`);
       const price = response.data.price;
       const data = { ...response.data, price }
       console.log("data: ",data);
@@ -82,7 +82,7 @@ const usePersonStore = create((set, get) => ({
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/person/addPerson', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/person/addPerson', dataToSend);
       
       // Mettre à jour la liste des personnes avec la nouvelle personne
       set(state => ({
@@ -106,7 +106,7 @@ const usePersonStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await axios.put(`http://localhost:3000/person/${personId}`, updateData);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/person/${personId}`, updateData);
       
       // Mettre à jour la personne dans la liste des personnes
       set(state => ({
@@ -132,7 +132,7 @@ const usePersonStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/person/${personId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/person/${personId}`);
       
       // Supprimer la personne de la liste des personnes
       set(state => ({

@@ -31,12 +31,22 @@ import Profile from './components/Profile';
 import PaymentList from './components/PaymentList';
 import PaymentForm from './components/PaymentForm';
 import Dashboard from './components/Dashboard';
+import LandingPage from './components/LandingPage';
 
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<Signup />} />
+      
+      {/* Landing page comme page d'accueil */}
+      <Route path="/" element={<LandingPage />} />
+      
+      <Route path="/dashboard" element={
+        <AuthGuard>
+          <Layout><Dashboard /></Layout>
+        </AuthGuard>
+      } />
       
       {/* Routes protégées avec layout */}
       <Route path="/" element={<div className="p-6">Bienvenue dans votre ERP<Link to={"/login"} >sign in</Link></div>} />

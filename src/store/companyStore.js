@@ -12,7 +12,7 @@ const useCompanyStore = create((set, get) => ({
   fetchAllCompanies: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/entreprise/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/entreprise/all');
       set({ companies: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -38,7 +38,7 @@ const useCompanyStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/entreprise/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/entreprise/admin/${adminId}`);
       set({ companies: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -54,7 +54,7 @@ const useCompanyStore = create((set, get) => ({
   fetchCompanyById: async (companyId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/entreprise/${companyId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/entreprise/${companyId}`);
       set({ currentCompany: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -78,7 +78,7 @@ const useCompanyStore = create((set, get) => ({
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/entreprise/create', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/entreprise/create', dataToSend);
       
       // Update the companies list with the new company
       set(state => ({
@@ -102,7 +102,7 @@ const useCompanyStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await axios.put(`http://localhost:3000/entreprise/${companyId}`, updateData);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/entreprise/${companyId}`, updateData);
       
       // Update the company in the companies list
       set(state => ({
@@ -128,7 +128,7 @@ const useCompanyStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/entreprise/${companyId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/entreprise/${companyId}`);
       
       // Remove the company from the companies list
       set(state => ({

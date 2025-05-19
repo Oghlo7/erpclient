@@ -23,7 +23,7 @@ const useQuoteStore = create((set, get) => ({
   fetchAllQuotes: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/devis/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/devis/all');
       set({ quotes: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -49,7 +49,7 @@ const useQuoteStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/devis/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/devis/admin/${adminId}`);
       set({ quotes: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -65,7 +65,7 @@ const useQuoteStore = create((set, get) => ({
   fetchQuoteById: async (quoteId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/devis/${quoteId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/devis/${quoteId}`);
       console.log("response.data: ", response.data)
       set({ currentQuote: response.data, isLoading: false });
       return { success: true, data: response.data };
@@ -91,7 +91,7 @@ const useQuoteStore = create((set, get) => ({
     };
   
     try {
-      const response = await axios.post('http://localhost:3000/devis', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/devis', dataToSend);
       
       // Update the quotes list with the new quote
       set(state => ({
@@ -122,7 +122,7 @@ const useQuoteStore = create((set, get) => ({
         articles: updateData.articles || {} // S'assurer que articles est toujours un tableau
       }
       
-      const response = await axios.put(`http://localhost:3000/devis/${quoteId}`, updateData);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/devis/${quoteId}`, updateData);
       console.log("updateedData: ", updateData)
       // Update the quote in the quotes list
       set(state => ({
@@ -148,7 +148,7 @@ const useQuoteStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/devis/${quoteId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/devis/${quoteId}`);
       
       // Remove the quote from the quotes list
       set(state => ({

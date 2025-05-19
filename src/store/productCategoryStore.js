@@ -13,7 +13,7 @@ const useProductCategoryStore = create((set, get) => ({
   fetchAllCategories: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/productCategory/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/productCategory/all');
       set({ categories: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -39,7 +39,7 @@ const useProductCategoryStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/productCategory/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/productCategory/admin/${adminId}`);
       set({ categories: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -55,7 +55,7 @@ const useProductCategoryStore = create((set, get) => ({
   fetchCategoryById: async (categoryId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/productCategory/${categoryId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/productCategory/${categoryId}`);
       set({ currentCategory: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -79,7 +79,7 @@ const useProductCategoryStore = create((set, get) => ({
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/productCategory', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/productCategory', dataToSend);
       
       // Mettre à jour la liste des catégories avec la nouvelle catégorie
       set(state => ({
@@ -103,7 +103,7 @@ const useProductCategoryStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await axios.put(`http://localhost:3000/productCategory/${categoryId}`, updateData);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/productCategory/${categoryId}`, updateData);
       
       // Mettre à jour la catégorie dans la liste des catégories
       set(state => ({
@@ -129,7 +129,7 @@ const useProductCategoryStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/productCategory/${categoryId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/productCategory/${categoryId}`);
       
       // Supprimer la catégorie de la liste des catégories
       set(state => ({

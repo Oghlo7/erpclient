@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import sublogo from '../assets/sublogo.svg';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -46,12 +47,12 @@ export default function Sidebar() {
   return (
     <div className="w-64 h-screen bg-white border-r border-gray-200 overflow-y-auto">
       <div className="p-4">
-        <div className="flex items-center mb-6">
-          <div className="w-10 h-10 rounded-full bg-teal-400 flex items-center justify-center">
-            <div className="text-white text-xl">★</div>
-          </div>
-          <h1 className="ml-3 text-xl font-semibold">ERP System</h1>
-        </div>
+      <div className="sidebar-header">
+      <Link to="/" className="flex items-center p-4">
+      <img src={sublogo} alt="Logo" 
+        className="w-10 h-10" />
+        </Link>
+      </div>
         
         <nav className="space-y-1">
           {menuItems.map((item) => (

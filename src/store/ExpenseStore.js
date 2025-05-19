@@ -13,7 +13,7 @@ const useExpenseStore = create((set, get) => ({
   fetchAllExpenses: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/expense/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/expense/all');
       set({ expenses: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -39,7 +39,7 @@ const useExpenseStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/expense/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/expense/admin/${adminId}`);
     //   let data = response.data;
     //   data.map((expense) => {
     //     expense.totale = expense.totale.toString();
@@ -60,7 +60,7 @@ const useExpenseStore = create((set, get) => ({
   fetchExpensesByCategory: async (category) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/expense/categorie/${category}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/expense/categorie/${category}`);
       set({ expenses: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -76,7 +76,7 @@ const useExpenseStore = create((set, get) => ({
   fetchExpenseById: async (expenseId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/expense/${expenseId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/expense/${expenseId}`);
       const totale = parseFloat(response.data.totale).toFixed(2);
       const data = { ...response.data, totale }
       console.log("data: ",data);
@@ -103,7 +103,7 @@ const useExpenseStore = create((set, get) => ({
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/expense', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/expense', dataToSend);
       
       // Mettre à jour la liste des expenses avec la nouvelle expense
       set(state => ({
@@ -139,7 +139,7 @@ const useExpenseStore = create((set, get) => ({
       
       console.log("updateData: ",dataSended);
 
-      const response = await axios.put(`http://localhost:3000/expense/${expenseId}`, dataSended);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/expense/${expenseId}`, dataSended);
       
       // Mettre à jour l'expense dans la liste des expenses
       set(state => ({
@@ -165,7 +165,7 @@ const useExpenseStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/expense/${expenseId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/expense/${expenseId}`);
       
       // Supprimer l'expense de la liste des expenses
       set(state => ({

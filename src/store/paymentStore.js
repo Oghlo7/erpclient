@@ -13,7 +13,7 @@ const usePaymentStore = create((set, get) => ({
   fetchAllPayments: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/payment/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/payment/all');
       set({ payments: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -27,7 +27,7 @@ const usePaymentStore = create((set, get) => ({
 
   fetchPaymentsByInvoice: async (invoiceId) => {
     try {
-      const response = await axios.get('http://localhost:3000/payment/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/payment/all');
       const payments = response.data.filter(payment => payment.invoice_id === invoiceId);
 
       set({ paymentsByInvoice: payments, isLoading: false });
@@ -55,7 +55,7 @@ const usePaymentStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/payment/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/payment/admin/${adminId}`);
       set({ payments: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -71,7 +71,7 @@ const usePaymentStore = create((set, get) => ({
   fetchPaymentById: async (paymentId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/payment/${paymentId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/payment/${paymentId}`);
       set({ currentPayment: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -95,7 +95,7 @@ const usePaymentStore = create((set, get) => ({
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/payment', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/payment', dataToSend);
       
       // Mettre à jour la liste des paiements avec le nouveau paiement
       set(state => ({
@@ -119,7 +119,7 @@ const usePaymentStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await axios.put(`http://localhost:3000/payment/${paymentId}`, updateData);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/payment/${paymentId}`, updateData);
       
       // Mettre à jour le paiement dans la liste des paiements
       set(state => ({
@@ -145,7 +145,7 @@ const usePaymentStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/payment/${paymentId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/payment/${paymentId}`);
       
       // Supprimer le paiement de la liste des paiements
       set(state => ({

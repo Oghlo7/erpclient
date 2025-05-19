@@ -34,7 +34,7 @@ export default function PersonList() {
     person.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     person.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     person.telephone?.includes(searchTerm) ||
-    getCompanyName(person.companyId)?.toLowerCase().includes(searchTerm.toLowerCase())
+    getCompanyName(person.entreprise)?.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   // Pagination
@@ -151,7 +151,7 @@ export default function PersonList() {
                       <div className="text-sm text-gray-900">{person.last_name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{getCompanyName(person.companyId)}</div>
+                      <div className="text-sm text-gray-500">{getCompanyName(person.entreprise)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-blue-600 hover:text-blue-800">

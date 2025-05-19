@@ -52,6 +52,7 @@ export default function PersonForm() {
         first_name: currentPerson.first_name || '',
         last_name: currentPerson.last_name || '',
         companyId: currentPerson.companyId || '',
+        entreprise: currentPerson.entreprise || '',
         tele: currentPerson.tele || '',
         email: currentPerson.email || '',
         id: currentPerson.id || ''
@@ -115,6 +116,7 @@ export default function PersonForm() {
     let result;
     
     if (isEditMode) {
+      console.log('updatePerson', formData);
       result = await updatePerson(id, formData);
     } else {
       result = await createPerson(formData);
@@ -191,15 +193,15 @@ export default function PersonForm() {
                 Entreprise
               </label>
               <select
-                name="companyId"
-                value={formData.companyId}
+                name="entreprise"
+                value={formData.entreprise}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-md px-3 py-2"
               >
                 <option value="">Sélectionner une entreprise</option>
-                {companies.map(company => (
-                  <option key={company.id} value={company.id}>
-                    {company.last_name}
+                {companies.map(entreprise => (
+                  <option key={entreprise.id} value={entreprise.id}>
+                    {entreprise.nom}
                   </option>
                 ))}
               </select>

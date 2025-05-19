@@ -13,7 +13,7 @@ const useProductStore = create((set, get) => ({
   fetchAllProducts: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/product/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/product/all');
       set({ products: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -39,7 +39,7 @@ const useProductStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/product/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/product/admin/${adminId}`);
     //   let data = response.data;
     //   data.map((product) => {
     //     product.price = product.price.toString();
@@ -60,7 +60,7 @@ const useProductStore = create((set, get) => ({
   fetchProductsByCategory: async (category) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/product/categorie/${category}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/product/categorie/${category}`);
       set({ products: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -76,7 +76,7 @@ const useProductStore = create((set, get) => ({
   fetchProductById: async (productId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/product/${productId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/product/${productId}`);
       const price = response.data.price.toString();
       const data = { ...response.data, price }
       console.log("data: ",data);
@@ -103,7 +103,7 @@ const useProductStore = create((set, get) => ({
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/product', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/product', dataToSend);
       
       // Mettre à jour la liste des products avec le nouveau product
       set(state => ({
@@ -127,7 +127,7 @@ const useProductStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await axios.put(`http://localhost:3000/product/${productId}`, updateData);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/product/${productId}`, updateData);
       
       // Mettre à jour le product dans la liste des products
       set(state => ({
@@ -153,7 +153,7 @@ const useProductStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/product/${productId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/product/${productId}`);
       
       // Supprimer le product de la liste des products
       set(state => ({

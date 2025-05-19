@@ -13,7 +13,7 @@ const useClientStore = create((set, get) => ({
   fetchAllClients: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/client/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/client/all');
       set({ clients: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -39,7 +39,7 @@ const useClientStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/client/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/client/admin/${adminId}`);
       set({ clients: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -55,7 +55,7 @@ const useClientStore = create((set, get) => ({
   fetchClientById: async (clientId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/client/${clientId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/client/${clientId}`);
       set({ currentClient: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -79,7 +79,7 @@ const useClientStore = create((set, get) => ({
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/client', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/client', dataToSend);
       
       // Update the clients list with the new client
       set(state => ({
@@ -103,7 +103,7 @@ const useClientStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await axios.put(`http://localhost:3000/client/${clientId}`, updateData);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/client/${clientId}`, updateData);
       
       // Update the client in the clients list
       set(state => ({
@@ -129,7 +129,7 @@ const useClientStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/client/${clientId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/client/${clientId}`);
       
       // Remove the client from the clients list
       set(state => ({

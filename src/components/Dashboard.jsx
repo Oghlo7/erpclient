@@ -1,645 +1,640 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowUp, FileText, Users, DollarSign, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { FileText, AlertCircle, Users, FileCheck, CreditCard, TrendingUp, Calendar } from 'lucide-react';
 import useInvoiceStore from '../store/invoiceStore';
 import useClientStore from '../store/clientStore';
+import useQuoteStore from '../store/quoteStore';
 import usePaymentStore from '../store/paymentStore';
 
 const Dashboard = () => {
-  const { invoices, fetchInvoicesByAdmin, isLoading: invoicesLoading } = useInvoiceStore();
-  const { clients, fetchClientsByAdmin, isLoading: clientsLoading } = useClientStore();
-  const { 
-    payments, 
-    fetchPaymentsByAdmin, 
-    isLoading: paymentsLoading 
-  } = usePaymentStore();
-  
+  // Récupérer les données depuis les stores
+  const { invoices, fetchInvoicesByAdmin, updateInvoice } = useInvoiceStore();
+  const { clients, fetchClientsByAdmin } = useClientStore();
+  const { quotes, fetchQuotesByAdmin } = useQuoteStore();
+  const { payments, fetchPaymentsByAdmin } = usePaymentStore();
+
+  // États pour les statistiques
   const [stats, setStats] = useState({
-    factures: { total: 0, ceMois: 0 },
-    devisClients: { total: 0, ceMois: 0 },
-    devisProspects: { total: 0, ceMois: 0 },
-    impaye: { total: 0, nonPaye: 0 }
+    totalInvoices: 0,
+    unpaidAmount: 0,
+    invoiceStats: {
+      pending: 0,
+      rejected: 0,
+      accepted: 0
+    },
+    quoteStats: {
+      pending: 0,
+      rejected: 0,
+      accepted: 0
+    },
+    clientStats: {
+      total: 0,
+      newThisMonth: 0,
+      activePercentage: 0
+    },
+    currentMonthRevenue: 0
   });
-  
-  const [statuts, setStatuts] = useState({
-    factures: {
-      brouillon: 0,
-      enAttente: 0,
-      impaye: 0,
-      enRetard: 0,
-      partiellement: 0,
-      paye: 0
-    },
-    devisClients: {
-      brouillon: 0,
-      enAttente: 0,
-      envoye: 0,
-      refuse: 0,
-      accepte: 0,
-      expire: 0
-    },
-    devisProspects: {
-      brouillon: 0,
-      enAttente: 0,
-      envoye: 0,
-      refuse: 0,
-      accepte: 0,
-      expire: 0
+
+  // Charger les données au chargement du composant
+  useEffect(() => {
+    const loadData = async () => {
+      await fetchInvoicesByAdmin();
+      await fetchClientsByAdmin();
+      await fetchQuotesByAdmin();
+      await fetchPaymentsByAdmin();
+    };
+    
+    loadData();
+  }, [fetchInvoicesByAdmin, fetchClientsByAdmin, fetchQuotesByAdmin, fetchPaymentsByAdmin]);
+
+  // Synchroniser les modifications des devis vers les factures
+  useEffect(() => {
+    if (quotes && invoices) {
+      // Pour chaque devis, vérifier s'il existe une facture correspondante
+      quotes.forEach(quote => {
+        const matchingInvoices = invoices.filter(invoice => 
+          invoice.client === quote.client && 
+          invoice.numFacture === quote.numFacture
+        );
+        
+        // Si des factures correspondantes sont trouvées, mettre à jour leurs informations
+        matchingInvoices.forEach(invoice => {
+          // Vérifier si les données sont différentes avant de mettre à jour
+          if (
+            invoice.client !== quote.client ||
+            invoice.type !== quote.type ||
+            invoice.total !== quote.total ||
+            JSON.stringify(invoice.articles) !== JSON.stringify(quote.articles)
+          ) {
+            // Créer un objet avec les données mises à jour
+            const updatedInvoice = {
+              ...invoice,
+              client: quote.client,
+              type: quote.type,
+              total: quote.total,
+              articles: quote.articles
+            };
+            
+            // Mettre à jour la facture
+            updateInvoice(invoice.id, updatedInvoice);
+          }
+        });
+      });
     }
-  });
-  
-  const [clientStats, setClientStats] = useState({
-    nouveauCeMois: 0,
-    actifs: 0,
-    pourcentageActifs: 0
-  });
-  
-  const [facturesRecentes, setFacturesRecentes] = useState([]);
-  const [devisRecents, setDevisRecents] = useState([]);
-  
+  }, [quotes, invoices, updateInvoice]);
+
+  // Calculer les statistiques lorsque les données sont chargées
   useEffect(() => {
-    // Charger les données
-    fetchInvoicesByAdmin();
-    fetchClientsByAdmin();
-    fetchPaymentsByAdmin();
-  }, [fetchInvoicesByAdmin, fetchClientsByAdmin, fetchPaymentsByAdmin]);
-  
-  useEffect(() => {
-    if (invoicesLoading || clientsLoading || paymentsLoading) return;
+    if (invoices && clients && quotes && payments) {
+      calculateStats();
+    }
+  }, [invoices, clients, quotes, payments]);
+
+  // Fonction pour calculer les statistiques
+  const calculateStats = () => {
+    // Date actuelle et premier jour du mois
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-    // Calculer les statistiques
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
+    // Statistiques des factures
+    const invoiceStats = {
+      pending: 0,
+      rejected: 0,
+      accepted: 0
+    };
     
-    // Filtrer les factures et devis du mois courant
-    const facturesCeMois = invoices.filter(inv => {
-      const invDate = new Date(inv.date);
-      return invDate.getMonth() === currentMonth && invDate.getFullYear() === currentYear && inv.type === 'Standard';
-    });
+    let unpaidAmount = 0;
+    let currentMonthRevenue = 0;
     
-    const devisClientsCeMois = invoices.filter(inv => {
-      const invDate = new Date(inv.date);
-      return invDate.getMonth() === currentMonth && invDate.getFullYear() === currentYear && inv.type === 'Devis' && inv.client_type === 'client';
-    });
-    
-    const devisProspectsCeMois = invoices.filter(inv => {
-      const invDate = new Date(inv.date);
-      return invDate.getMonth() === currentMonth && invDate.getFullYear() === currentYear && inv.type === 'Devis' && inv.client_type === 'prospect';
-    });
-    
-    // Calculer les montants
-    const montantFacturesCeMois = facturesCeMois.reduce((sum, inv) => sum + inv.total, 0);
-    const montantDevisClientsCeMois = devisClientsCeMois.reduce((sum, inv) => sum + inv.total, 0);
-    const montantDevisProspectsCeMois = devisProspectsCeMois.reduce((sum, inv) => sum + inv.total, 0);
-    
-    // Calculer les impayés
-    const facturesImpayees = invoices.filter(inv => inv.type === 'Standard' && (inv.status === 'Impayé' || inv.status === 'En Retard'));
-    const montantImpayes = facturesImpayees.reduce((sum, inv) => sum + (inv.total - inv.paid), 0);
-    
-    // Mettre à jour les statistiques
-    setStats({
-      factures: { 
-        total: invoices.filter(inv => inv.type === 'Standard').length, 
-        ceMois: montantFacturesCeMois 
-      },
-      devisClients: { 
-        total: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'client').length, 
-        ceMois: montantDevisClientsCeMois 
-      },
-      devisProspects: { 
-        total: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'prospect').length, 
-        ceMois: montantDevisProspectsCeMois 
-      },
-      impaye: { 
-        total: facturesImpayees.length, 
-        nonPaye: montantImpayes 
+    invoices.forEach(invoice => {
+      // Compter par statut
+      switch(invoice.status) {
+        case 'en attente':
+          invoiceStats.pending++;
+          break;
+        case 'refusé':
+          invoiceStats.rejected++;
+          break;
+        case 'accepté':
+          invoiceStats.accepted++;
+          // Calculer le revenu du mois en cours
+          const invoiceDate = new Date(invoice.date);
+          if (invoiceDate >= firstDayOfMonth) {
+            currentMonthRevenue += parseFloat(invoice.total);
+          }
+          break;
+        default:
+          // Pour les autres statuts, on ne les compte pas
+          break;
+      }
+      
+      // Calculer le montant impayé pour les factures en attente ou refusées
+      if (invoice.status === 'en attente' || invoice.status === 'refusé') {
+        unpaidAmount += parseFloat(invoice.total) - parseFloat(invoice.paid || 0);
       }
     });
     
-    // Calculer les statuts
-    const facturesParStatut = {
-      brouillon: invoices.filter(inv => inv.type === 'Standard' && inv.status === 'Brouillon').length,
-      enAttente: invoices.filter(inv => inv.type === 'Standard' && inv.status === 'En attente').length,
-      impaye: invoices.filter(inv => {
-        // Une facture est impayée si elle n'a pas de paiement associé
-        // ou si le montant total des paiements est inférieur au montant total de la facture
-        if (inv.type !== 'Standard') return false;
-        
-        const invoicePayments = payments.filter(payment => payment.invoice_id === inv.id);
-        const totalPaid = invoicePayments.reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
-        
-        return totalPaid < (parseFloat(inv.total) || 0) && inv.status !== 'Payé';
-      }).length,
-      enRetard: invoices.filter(inv => {
-        if (!inv.dateExpiration) return false;
-        const today = new Date();
-        let expirationDate;
-        
-        // Convertir la date d'expiration en objet Date
-        if (typeof inv.dateExpiration === 'string') {
-          // Si le format est JJ/MM/AAAA
-          if (inv.dateExpiration.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-            const [day, month, year] = inv.dateExpiration.split('/');
-            expirationDate = new Date(year, month - 1, day);
-          } 
-          // Si le format est AAAA-MM-JJ
-          else if (inv.dateExpiration.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            expirationDate = new Date(inv.dateExpiration);
-          } 
-          // Autres formats de date
-          else {
-            expirationDate = new Date(inv.dateExpiration);
-          }
-        } else {
-          expirationDate = new Date(inv.dateExpiration);
-        }
-        
-        // Vérifier si la date est valide
-        if (isNaN(expirationDate.getTime())) return false;
-        
-        // Comparer les dates (sans tenir compte de l'heure)
-        today.setHours(0, 0, 0, 0);
-        expirationDate.setHours(0, 0, 0, 0);
-        
-        return expirationDate < today && inv.type === 'Standard' && inv.status !== 'Payé';
-      }).length,
-      partiellement: invoices.filter(inv => {
-        if (inv.type !== 'Standard') return false;
-        
-        const invoicePayments = payments.filter(payment => payment.invoice_id === inv.id);
-        const totalPaid = invoicePayments.reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
-        
-        return totalPaid > 0 && totalPaid < (parseFloat(inv.total) || 0);
-      }).length,
-      paye: invoices.filter(inv => inv.type === 'Standard' && inv.status === 'Payé').length
+    // Statistiques des devis
+    const quoteStats = {
+      pending: 0,
+      rejected: 0,
+      accepted: 0
     };
     
-    const devisClientsParStatut = {
-      brouillon: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'client' && inv.status === 'Brouillon').length,
-      enAttente: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'client' && inv.status === 'En attente').length,
-      envoye: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'client' && inv.status === 'Envoyé').length,
-      refuse: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'client' && inv.status === 'Refusé').length,
-      accepte: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'client' && inv.status === 'Accepté').length,
-      expire: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'client' && inv.status === 'Expiré').length
-    };
-    
-    const devisProspectsParStatut = {
-      brouillon: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'prospect' && inv.status === 'Brouillon').length,
-      enAttente: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'prospect' && inv.status === 'En attente').length,
-      envoye: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'prospect' && inv.status === 'Envoyé').length,
-      refuse: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'prospect' && inv.status === 'Refusé').length,
-      accepte: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'prospect' && inv.status === 'Accepté').length,
-      expire: invoices.filter(inv => inv.type === 'Devis' && inv.client_type === 'prospect' && inv.status === 'Expiré').length
-    };
-    
-    setStatuts({
-      factures: facturesParStatut,
-      devisClients: devisClientsParStatut,
-      devisProspects: devisProspectsParStatut
+    quotes.forEach(quote => {
+      // Compter par statut
+      switch(quote.status) {
+        case 'en attente':
+          quoteStats.pending++;
+          break;
+        case 'refusé':
+          quoteStats.rejected++;
+          break;
+        case 'accepté':
+          quoteStats.accepted++;
+          break;
+        default:
+          // Pour les autres statuts (brouillon, envoyé, expiré), on ne les compte pas
+          break;
+      }
     });
     
-    // Calculer les statistiques clients
-    const clientsCeMois = clients.filter(client => {
+    // Statistiques des clients
+    const newClientsThisMonth = clients.filter(client => {
       const createdAt = new Date(client.created_at);
-      return createdAt.getMonth() === currentMonth && createdAt.getFullYear() === currentYear;
+      return createdAt >= firstDayOfMonth;
+    }).length;
+    
+    const activeClients = clients.filter(client => {
+      // Un client est considéré comme actif s'il a une facture ou un devis dans les 3 derniers mois
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      
+      const hasRecentInvoice = invoices.some(invoice => 
+        invoice.client === client.id && new Date(invoice.date) >= threeMonthsAgo
+      );
+      
+      const hasRecentQuote = quotes.some(quote => 
+        quote.client === client.id && new Date(quote.created_at) >= threeMonthsAgo
+      );
+      
+      return hasRecentInvoice || hasRecentQuote;
+    }).length;
+    
+    const activePercentage = clients.length > 0 
+      ? (activeClients / clients.length) * 100 
+      : 0;
+    
+    // Mettre à jour les statistiques
+    setStats({
+      totalInvoices: invoices.length,
+      unpaidAmount,
+      invoiceStats,
+      quoteStats,
+      clientStats: {
+        total: clients.length,
+        newThisMonth: newClientsThisMonth,
+        activePercentage
+      },
+      currentMonthRevenue
     });
-    
-    const clientsActifs = clients.filter(client => {
-      // Un client est considéré actif s'il a au moins une facture payée
-      return invoices.some(inv => inv.client === client.id && inv.status === 'Payé');
-    });
-    
-    setClientStats({
-      nouveauCeMois: clientsCeMois.length,
-      actifs: clientsActifs.length,
-      pourcentageActifs: clients.length > 0 ? (clientsActifs.length / clients.length) * 100 : 0
-    });
-    
-    // Récupérer les factures et devis récents
-    const facturesRecentes = invoices
-      .filter(inv => inv.type === 'Standard')
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 5);
-    
-    const devisRecents = invoices
-      .filter(inv => inv.type === 'Devis')
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 5);
-    
-    setFacturesRecentes(facturesRecentes);
-    setDevisRecents(devisRecents);
-    
-  }, [invoices, clients, payments, invoicesLoading, clientsLoading, paymentsLoading]);
-  
-  // Fonction pour formater les montants
-  const formatMontant = (montant, devise = '$') => {
-    return `${devise} ${montant.toFixed(2)}`;
   };
-  
-  // Fonction pour obtenir le nom du client
-  const getClientName = (clientId) => {
-    const client = clients.find(c => c.id === clientId);
-    return client ? `${client.first_name} ${client.last_name}` : '-';
-  };
-  
-  // Fonction pour calculer le pourcentage
-  const calculerPourcentage = (valeur, total) => {
-    return total > 0 ? (valeur / total) * 100 : 0;
-  };
-  
-  if (invoicesLoading || clientsLoading || paymentsLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
 
-    const chiL3ba = () => {
-        return (
-            <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-medium">Factures</h2>
-                <FileText className="text-blue-500" size={24} />
-            </div>
-            <div className="mb-2">
-                <span className="text-gray-600 text-sm">Ce mois-ci</span>
-                <div className="text-blue-600 font-semibold">
-                {formatMontant(stats.factures.ceMois)}
-                </div>
-            </div>
-            </div>
-        )
-    }
-  
+  // Formater les montants en devise
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('ma-MA', {
+      style: 'currency',
+      currency: 'MAD'
+    }).format(amount);
+  };
+
+  // Calculer le pourcentage pour les barres de progression
+  const calculatePercentage = (value, total) => {
+    if (total === 0) return 0;
+    return (value / total) * 100;
+  };
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-semibold mb-6">Tableau de bord</h1>
+      <h1 className="text-2xl font-bold mb-6">Tableau de bord</h1>
       
-      {/* Cartes de statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Factures */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium">Factures</h2>
-            <FileText className="text-blue-500" size={24} />
+      {/* Cartes de résumé */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Factures ce mois-ci */}
+        <div className="bg-white rounded-lg shadow p-6 flex items-start">
+          <div className="mr-4 p-3 bg-blue-100 rounded-full">
+            <FileText className="text-blue-600" size={24} />
           </div>
-          <div className="mb-2">
-            <span className="text-gray-600 text-sm">Ce mois-ci</span>
-            <div className="text-blue-600 font-semibold">
-              {formatMontant(stats.factures.ceMois)}
-            </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-700">Factures</h2>
+            <p className="text-gray-500">Ce mois-ci</p>
+            <p className="text-2xl font-bold text-blue-600 mt-1">
+              {formatCurrency(stats.currentMonthRevenue)}
+            </p>
           </div>
         </div>
         
-        {/* Devis Pour Les Clients */}
-        <chiL3ba />
-        
-        
-        {/* Impayé */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium">Impayé</h2>
-            <AlertCircle className="text-red-500" size={24} />
+        {/* Montant impayé */}
+        <div className="bg-white rounded-lg shadow p-6 flex items-start">
+          <div className="mr-4 p-3 bg-red-100 rounded-full">
+            <AlertCircle className="text-red-600" size={24} />
           </div>
-          <div className="mb-2">
-            <span className="text-gray-600 text-sm">Non payé</span>
-            <div className="text-red-600 font-semibold">
-              {formatMontant(stats.impaye.nonPaye)}
-            </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-700">Impayé</h2>
+            <p className="text-gray-500">Non payé</p>
+            <p className="text-2xl font-bold text-red-600 mt-1">
+              {formatCurrency(stats.unpaidAmount)}
+            </p>
           </div>
         </div>
       </div>
       
-      {/* Graphiques et statistiques */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+      {/* Statistiques détaillées */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {/* Statistiques des factures */}
-        <div className="bg-white rounded-lg shadow p-6 lg:col-span-1">
-          <h2 className="text-lg font-medium mb-4">Factures</h2>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Factures</h2>
+            <Link to="/invoice" className="text-blue-600 hover:underline text-sm">
+              Voir tout
+            </Link>
+          </div>
+          
+          <div className="flex justify-center mb-6">
+            <div className="relative w-32 h-32">
+              <svg viewBox="0 0 24 24" className="w-full h-full">
+                <circle cx="12" cy="12" r="10" fill="#EFF6FF" />
+                <path 
+                  d="M6 8h12M6 12h12M6 16h8" 
+                  stroke="#3B82F6" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+                <path 
+                  d="M19 4H5C3.89543 4 3 4.89543 3 6V18C3 19.1046 3.89543 20 5 20H19C20.1046 20 21 19.1046 21 18V6C21 4.89543 20.1046 4 19 4Z" 
+                  stroke="#3B82F6" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+            </div>
+          </div>
           
           <div className="space-y-4">
             <div>
               <div className="flex justify-between mb-1">
-                <span>Brouillon</span>
-                <span>{calculerPourcentage(statuts.factures.brouillon, stats.factures.total).toFixed(0)} %</span>
+                <span className="text-sm text-gray-600">En attente</span>
+                <span className="text-sm text-gray-600">{stats.invoiceStats.pending} %</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gray-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.factures.brouillon, stats.factures.total)}%` }}></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between mb-1">
-                <span>En attente</span>
-                <span>{calculerPourcentage(statuts.factures.enAttente, stats.factures.total).toFixed(0)} %</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-yellow-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.factures.enAttente, stats.factures.total)}%` }}></div>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden transition-all duration-500 ease-in-out">
+                <div 
+                  className="bg-yellow-400 h-2 rounded-full transition-all duration-500 ease-in-out transform hover:scale-x-105" 
+                  style={{ width: `${calculatePercentage(stats.invoiceStats.pending, stats.totalInvoices)}%` }}
+                ></div>
               </div>
             </div>
             
             <div>
               <div className="flex justify-between mb-1">
-                <span>Impayé</span>
-                <span>{calculerPourcentage(statuts.factures.impaye, stats.factures.total).toFixed(0)} %</span>
+                <span className="text-sm text-gray-600">Refusé</span>
+                <span className="text-sm text-gray-600">{stats.invoiceStats.rejected} %</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-red-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.factures.impaye, stats.factures.total)}%` }}></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between mb-1">
-                <span>En Retard</span>
-                <span>{calculerPourcentage(statuts.factures.enRetard, stats.factures.total).toFixed(0)} %</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-orange-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.factures.enRetard, stats.factures.total)}%` }}></div>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden transition-all duration-500 ease-in-out">
+                <div 
+                  className="bg-red-500 h-2 rounded-full transition-all duration-500 ease-in-out transform hover:scale-x-105" 
+                  style={{ width: `${calculatePercentage(stats.invoiceStats.rejected, stats.totalInvoices)}%` }}
+                ></div>
               </div>
             </div>
             
             <div>
               <div className="flex justify-between mb-1">
-                <span>Envoyé</span>
-                <span>{calculerPourcentage(statuts.factures.partiellement, stats.factures.total).toFixed(0)} %</span>
+                <span className="text-sm text-gray-600">Accepté</span>
+                <span className="text-sm text-gray-600">{stats.invoiceStats.accepted} %</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-teal-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.factures.partiellement, stats.factures.total)}%` }}></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between mb-1">
-                <span>Payé</span>
-                <span>{calculerPourcentage(statuts.factures.paye, stats.factures.total).toFixed(0)} %</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.factures.paye, stats.factures.total)}%` }}></div>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden transition-all duration-500 ease-in-out">
+                <div 
+                  className="bg-green-500 h-2 rounded-full transition-all duration-500 ease-in-out transform hover:scale-x-105" 
+                  style={{ width: `${calculatePercentage(stats.invoiceStats.accepted, stats.totalInvoices)}%` }}
+                ></div>
               </div>
             </div>
           </div>
         </div>
         
-        {/* Statistiques des devis clients */}
-        <div className="bg-white rounded-lg shadow p-6 lg:col-span-1">
-          <h2 className="text-lg font-medium mb-4">Devis pour les clients</h2>
+        {/* Statistiques des devis */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Devis pour les clients</h2>
+            <Link to="/quote" className="text-blue-600 hover:underline text-sm">
+              Voir tout
+            </Link>
+          </div>
+          
+          <div className="flex justify-center mb-6">
+            <div className="relative w-32 h-32">
+              <svg viewBox="0 0 24 24" className="w-full h-full">
+                <circle cx="12" cy="12" r="10" fill="#F0FDF4" />
+                <path 
+                  d="M9 7H6C5.44772 7 5 7.44772 5 8V18C5 18.5523 5.44772 19 6 19H18C18.5523 19 19 18.5523 19 18V8C19 7.44772 18.5523 7 18 7H15M9 7V5C9 4.44772 9.44772 4 10 4H14C14.5523 4 15 4.44772 15 5V7M9 7H15" 
+                  stroke="#22C55E" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <path 
+                  d="M12 12H15M12 16H15M9 12H9.01M9 16H9.01" 
+                  stroke="#22C55E" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
           
           <div className="space-y-4">
             <div>
               <div className="flex justify-between mb-1">
-                <span>Brouillon</span>
-                <span>{calculerPourcentage(statuts.devisClients.brouillon, stats.devisClients.total).toFixed(0)} %</span>
+                <span className="text-sm text-gray-600">En attente</span>
+                <span className="text-sm text-gray-600">{stats.quoteStats.pending} %</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gray-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.devisClients.brouillon, stats.devisClients.total)}%` }}></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between mb-1">
-                <span>En attente</span>
-                <span>{calculerPourcentage(statuts.devisClients.enAttente, stats.devisClients.total).toFixed(0)} %</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-yellow-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.devisClients.enAttente, stats.devisClients.total)}%` }}></div>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden transition-all duration-500 ease-in-out">
+                <div 
+                  className="bg-yellow-400 h-2 rounded-full transition-all duration-500 ease-in-out transform hover:scale-x-105" 
+                  style={{ width: `${calculatePercentage(stats.quoteStats.pending, quotes.length)}%` }}
+                ></div>
               </div>
             </div>
             
             <div>
               <div className="flex justify-between mb-1">
-                <span>Envoyé</span>
-                <span>{calculerPourcentage(statuts.devisClients.envoye, stats.devisClients.total).toFixed(0)} %</span>
+                <span className="text-sm text-gray-600">Refusé</span>
+                <span className="text-sm text-gray-600">{stats.quoteStats.rejected} %</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.devisClients.envoye, stats.devisClients.total)}%` }}></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between mb-1">
-                <span>Refusé</span>
-                <span>{calculerPourcentage(statuts.devisClients.refuse, stats.devisClients.total).toFixed(0)} %</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-red-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.devisClients.refuse, stats.devisClients.total)}%` }}></div>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden transition-all duration-500 ease-in-out">
+                <div 
+                  className="bg-red-500 h-2 rounded-full transition-all duration-500 ease-in-out transform hover:scale-x-105" 
+                  style={{ width: `${calculatePercentage(stats.quoteStats.rejected, quotes.length)}%` }}
+                ></div>
               </div>
             </div>
             
             <div>
               <div className="flex justify-between mb-1">
-                <span>Accepté</span>
-                <span>{calculerPourcentage(statuts.devisClients.accepte, stats.devisClients.total).toFixed(0)} %</span>
+                <span className="text-sm text-gray-600">Accepté</span>
+                <span className="text-sm text-gray-600">{stats.quoteStats.accepted} %</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.devisClients.accepte, stats.devisClients.total)}%` }}></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between mb-1">
-                <span>Expiré</span>
-                <span>{calculerPourcentage(statuts.devisClients.expire, stats.devisClients.total).toFixed(0)} %</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gray-500 h-2 rounded-full" style={{ width: `${calculerPourcentage(statuts.devisClients.expire, stats.devisClients.total)}%` }}></div>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden transition-all duration-500 ease-in-out">
+                <div 
+                  className="bg-green-500 h-2 rounded-full transition-all duration-500 ease-in-out transform hover:scale-x-105" 
+                  style={{ width: `${calculatePercentage(stats.quoteStats.accepted, quotes.length)}%` }}
+                ></div>
               </div>
             </div>
           </div>
         </div>
-        
-      
-  
         
         {/* Statistiques des clients */}
-        <div className="bg-white rounded-lg shadow p-6 lg:col-span-1">
-          <h2 className="text-lg font-medium mb-4">Clients</h2>
+        <div className="bg-white rounded-lg shadow-lg p-6 transition-all duration-300 hover:shadow-xl">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-800">Clients</h2>
+            <Link to="/client" className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors duration-200">
+              Voir tout
+            </Link>
+          </div>
           
-          <div className="flex flex-col items-center justify-center">
-            <div className="relative w-40 h-40 mb-4">
-              <div className="w-full h-full rounded-full bg-gray-100 flex items-center justify-center">
-                <div className="text-3xl font-bold">{clientStats.pourcentageActifs.toFixed(0)}%</div>
-              </div>
-              <div className="absolute top-0 left-0 w-full h-full">
-                <svg viewBox="0 0 100 100" className="w-full h-full">
-                  <circle 
-                    cx="50" cy="50" r="45" 
+          <div className="flex justify-center mb-8">
+            <div className="relative w-48 h-48">
+              <svg viewBox="0 0 36 36" className="w-full h-full">
+                {/* Cercle de fond gris */}
+                <path
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#E5E7EB"
+                  strokeWidth="3"
+                  strokeDasharray="100, 100"
+                />
+                {/* Cercle de progression violet */}
+                <path
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#6366F1"
+                  strokeWidth="3"
+                  strokeDasharray={`${stats.clientStats.activePercentage}, 100`}
+                  strokeLinecap="round"
+                  className="transition-all duration-1000 ease-in-out"
+                />
+                {/* Icône de personnes au centre */}
+                <g transform="translate(10, 10) scale(0.8)">
+                  <path 
+                    d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" 
                     fill="none" 
-                    stroke="#e5e7eb" 
-                    strokeWidth="10" 
+                    stroke="#111827" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
                   />
                   <circle 
-                    cx="50" cy="50" r="45" 
+                    cx="9" 
+                    cy="7" 
+                    r="4" 
                     fill="none" 
-                    stroke="#10b981" 
-                    strokeWidth="10" 
-                    strokeDasharray={`${clientStats.pourcentageActifs * 2.83} 283`} 
-                    strokeDashoffset="0" 
-                    transform="rotate(-90 50 50)" 
+                    stroke="#111827" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
                   />
+                  <path 
+                    d="M23 21v-2a4 4 0 0 0-3-3.87" 
+                    fill="none" 
+                    stroke="#111827" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  />
+                  <path 
+                    d="M16 3.13a4 4 0 0 1 0 7.75" 
+                    fill="none" 
+                    stroke="#111827" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  />
+                </g>
+              </svg>
+            </div>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="text-center bg-gray-50 rounded-lg p-4">
+              <p className="text-gray-600 mb-2 font-medium">Nouveau client ce mois-ci</p>
+              <p className="text-4xl font-bold text-gray-900">{stats.clientStats.newThisMonth}</p>
+            </div>
+            
+            <div className="text-center bg-gray-50 rounded-lg p-4">
+              <p className="text-gray-600 mb-2 font-medium">Client actif</p>
+              <p className="text-2xl font-semibold text-green-600 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
                 </svg>
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-gray-500 mb-1">Nouveau client ce mois-ci</div>
-              <div className="font-medium">{clientStats.nouveauCeMois}</div>
-            </div>
-            <div className="text-center mt-4">
-              <div className="text-sm text-gray-500 mb-1">Client actif</div>
-              <div className="font-medium text-green-600">
-                <ArrowUp className="inline-block mr-1" size={16} />
-                {clientStats.pourcentageActifs.toFixed(2)} %
-              </div>
+                {stats.clientStats.activePercentage.toFixed(2)} %
+              </p>
             </div>
           </div>
         </div>
       </div>
       
-      {/* Factures et devis récents */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Factures récentes */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-medium">Factures récentes</h2>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Numéro
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {facturesRecentes.length > 0 ? (
-                  facturesRecentes.map((facture, index) => (
-                    <tr key={facture.id || index}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {facture.numFacture}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getClientName(facture.client)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {formatMontant(facture.total)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${facture.status === 'Payé' ? 'bg-green-100 text-green-800' : 
-                            facture.status === 'Envoyé' ? 'bg-blue-100 text-blue-800' : 
-                            facture.status === 'En Retard' ? 'bg-red-100 text-red-800' : 
-                            'bg-gray-100 text-gray-800'}`}>
-                          {facture.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button className="text-gray-400 hover:text-gray-500">
-                          ...
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-10 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="mb-4">
-                          <FileText className="h-12 w-12 text-gray-300" />
-                        </div>
-                        <p className="text-gray-500">Aucune donnée</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+      {/* Dernières transactions */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Derniers paiements</h2>
+          <Link to="/payment" className="text-blue-600 hover:underline text-sm">
+            Voir tout
+          </Link>
         </div>
         
-        {/* Devis récents */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-medium">Devis récents</h2>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Numéro
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {devisRecents.length > 0 ? (
-                  devisRecents.map((devis, index) => (
-                    <tr key={devis.id || index}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {devis.numFacture}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getClientName(devis.client)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {formatMontant(devis.total)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${devis.status === 'Accepté' ? 'bg-green-100 text-green-800' : 
-                            devis.status === 'Envoyé' ? 'bg-blue-100 text-blue-800' : 
-                            devis.status === 'Refusé' ? 'bg-red-100 text-red-800' : 
-                            'bg-gray-100 text-gray-800'}`}>
-                          {devis.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button className="text-gray-400 hover:text-gray-500">
-                          ...
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-10 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="mb-4">
-                          <FileText className="h-12 w-12 text-gray-300" />
-                        </div>
-                        <p className="text-gray-500">Aucune donnée</p>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Client
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Facture
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Montant
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Statut
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {payments.slice(0, 5).map((payment, index) => {
+                // Trouver le client correspondant au paiement
+                const client = clients.find(c => c.id === payment.client);
+                
+                // Trouver la facture correspondante
+                const invoice = invoices.find(i => i.id === payment.invoice);
+                
+                // Si le client n'est pas trouvé directement, chercher le client associé à la facture
+                const clientFromInvoice = !client && invoice ? 
+                  clients.find(c => c.id === invoice.client) : null;
+                
+                // Trouver le devis correspondant à la facture
+                const quote = invoice && invoice.quote ? 
+                  quotes.find(q => q.id === invoice.quote) : null;
+                
+                // Déterminer le statut à afficher
+                let status = "En attente";
+                let statusClass = "bg-yellow-100 text-yellow-800";
+                
+                if (quote) {
+                  // Si un devis est trouvé, utiliser son statut
+                  switch(quote.status) {
+                    case 'Refusé':
+                    case 'refusé':
+                      status = "Refusé";
+                      statusClass = "bg-red-100 text-red-800";
+                      break;
+                    case 'Accepté':
+                    case 'accepté':
+                      status = "Accepté";
+                      statusClass = "bg-green-100 text-green-800";
+                      break;
+                    case 'En attente':
+                    case 'en attente':
+                      status = "En attente";
+                      statusClass = "bg-yellow-100 text-yellow-800";
+                      break;
+                    default:
+                      status = "En attente";
+                      statusClass = "bg-yellow-100 text-yellow-800";
+                  }
+                } else if (invoice) {
+                  // Si seulement une facture est trouvée, utiliser son statut
+                  switch(invoice.status) {
+                    case 'Refusé':
+                    case 'refusé':
+                      status = "Refusé";
+                      statusClass = "bg-red-100 text-red-800";
+                      break;
+                    case 'Accepté':
+                    case 'accepté':
+                    case 'payé':
+                    case 'Payé':
+                      status = "Accepté";
+                      statusClass = "bg-green-100 text-green-800";
+                      break;
+                    case 'En attente':
+                    case 'en attente':
+                      status = "En attente";
+                      statusClass = "bg-yellow-100 text-yellow-800";
+                      break;
+                    default:
+                      status = "En attente";
+                      statusClass = "bg-yellow-100 text-yellow-800";
+                  }
+                }
+                
+                return (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {client 
+                          ? `${client.first_name} ${client.last_name}` 
+                          : clientFromInvoice 
+                            ? `${clientFromInvoice.first_name} ${clientFromInvoice.last_name}`
+                            : 'Client inconnu'}
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {invoice ? invoice.numFacture : payment.invoice || 'Facture inconnue'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {new Date(payment.date).toLocaleDateString('fr-FR')}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {formatCurrency(payment.montant || 0)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-3 py-1.5 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}`}>
+                        {status}
+                      </span>
+                    </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                );
+              })}
+              
+              {payments.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
+                    Aucun paiement trouvé
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

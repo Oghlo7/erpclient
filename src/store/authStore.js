@@ -22,7 +22,7 @@ const useAuthStore = create(
       login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.post('http://localhost:3000/auth/login', {
+          const response = await axios.post('https://erp-repo-nnrs.onrender.com/auth/login', {
             email,
             password,
           });
@@ -59,10 +59,10 @@ const useAuthStore = create(
 
         const { email, password } = userData;
         try {
-          const response1 = await axios.post('http://localhost:3000/admin/addAdmin', userData);
+          const response1 = await axios.post('https://erp-repo-nnrs.onrender.com/admin/addAdmin', userData);
           console.log(response1.data);
 
-          const response2 = await axios.post('http://localhost:3000/auth/login', {
+          const response2 = await axios.post('https://erp-repo-nnrs.onrender.com/auth/login', {
             email,
             password,
           });
@@ -116,7 +116,7 @@ const useAuthStore = create(
           // Set auth header
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           
-          const response = await axios.get('http://localhost:3000/auth');
+          const response = await axios.get('https://erp-repo-nnrs.onrender.com/auth');
           
           set({
             isAuthenticated: true,

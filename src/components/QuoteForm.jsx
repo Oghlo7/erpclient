@@ -426,18 +426,7 @@ export default function QuoteForm() {
               </select>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total
-              </label>
-              <input
-                type="number"
-                value={formData.total}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100"
-                disabled
-              />
-              <p className="mt-1 text-xs text-gray-500">Le total est fixé à 32 pour le moment</p>
-            </div>
+          
           </div>
           
           <div className="mt-8 flex justify-end">
@@ -581,7 +570,7 @@ export default function QuoteForm() {
         </div>
       </div>
 
-      <button onClick={handleAffichCart}>ahhdh</button>
+      
       
       {/* Affichage du state pour débogage */}
       {/* <div className="mt-8 p-4 bg-gray-100 rounded">

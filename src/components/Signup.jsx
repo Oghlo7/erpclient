@@ -13,7 +13,7 @@ export default function Signup() {
     email: '',
     password: '', // jiji123jiji
     pays: 'Maroc',
-    profil: 'twichiya182.png'
+    profil: 'twichiynkjubuvbjgvtdthhthff2.png'
   });
   
   const [errors, setErrors] = useState({

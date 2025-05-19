@@ -23,7 +23,7 @@ const useInvoiceStore = create((set, get) => ({
   fetchAllInvoices: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/invoice/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/invoice/all');
       set({ invoices: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -49,7 +49,7 @@ const useInvoiceStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/invoice/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/invoice/admin/${adminId}`);
       set({ invoices: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -65,7 +65,7 @@ const useInvoiceStore = create((set, get) => ({
   fetchInvoiceById: async (invoiceId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/invoice/${invoiceId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/invoice/${invoiceId}`);
       console.log("response.data: ", response.data)
       set({ currentInvoice: response.data, isLoading: false });
       return { success: true, data: response.data };
@@ -91,7 +91,7 @@ const useInvoiceStore = create((set, get) => ({
     };
   
     try {
-      const response = await axios.post('http://localhost:3000/invoice', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/invoice', dataToSend);
       
       // Update the invoices list with the new invoice
       set(state => ({
@@ -122,7 +122,7 @@ const useInvoiceStore = create((set, get) => ({
         articles: updateData.articles || {} // S'assurer que articles est toujours un tableau
       }
       
-      const response = await axios.put(`http://localhost:3000/invoice/${invoiceId}`, updateData);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/invoice/${invoiceId}`, updateData);
       console.log("updateedData: ", updateData)
       // Update the invoice in the invoices list
       set(state => ({
@@ -148,7 +148,7 @@ const useInvoiceStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/invoice/${invoiceId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/invoice/${invoiceId}`);
       
       // Remove the invoice from the invoices list
       set(state => ({

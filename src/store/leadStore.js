@@ -13,7 +13,7 @@ const useLeadStore = create((set, get) => ({
   fetchAllLeads: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('http://localhost:3000/leads/all');
+      const response = await axios.get('https://erp-repo-nnrs.onrender.com/leads/all');
       set({ leads: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -39,7 +39,7 @@ const useLeadStore = create((set, get) => ({
     }
 
     try {
-      const response = await axios.get(`http://localhost:3000/leads/admin/${adminId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/leads/admin/${adminId}`);
       set({ leads: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -55,7 +55,7 @@ const useLeadStore = create((set, get) => ({
   fetchLeadsByStatus: async (status) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/leads/status/${status}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/leads/status/${status}`);
       set({ leads: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -71,7 +71,7 @@ const useLeadStore = create((set, get) => ({
   fetchLeadById: async (leadId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`http://localhost:3000/leads/${leadId}`);
+      const response = await axios.get(`https://erp-repo-nnrs.onrender.com/leads/${leadId}`);
       set({ currentLead: response.data, isLoading: false });
       return { success: true, data: response.data };
     } catch (error) {
@@ -95,7 +95,7 @@ const useLeadStore = create((set, get) => ({
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/leads', dataToSend);
+      const response = await axios.post('https://erp-repo-nnrs.onrender.com/leads', dataToSend);
       
       // Mettre à jour la liste des leads avec le nouveau lead
       set(state => ({
@@ -119,7 +119,7 @@ const useLeadStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await axios.put(`http://localhost:3000/leads/${leadId}`, updateData);
+      const response = await axios.put(`https://erp-repo-nnrs.onrender.com/leads/${leadId}`, updateData);
       
       // Mettre à jour le lead dans la liste des leads
       set(state => ({
@@ -145,7 +145,7 @@ const useLeadStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await axios.delete(`http://localhost:3000/leads/${leadId}`);
+      await axios.delete(`https://erp-repo-nnrs.onrender.com/leads/${leadId}`);
       
       // Supprimer le lead de la liste des leads
       set(state => ({
